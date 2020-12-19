@@ -1,0 +1,9 @@
+{
+    "permissionType" : "camera",
+    "title" : "Camera Permission",
+    "reason" : "A picture tells a thousand words.",
+    "restrictedMessage" : "Your access to the camera is restricted.",
+    "deniedMessage" : "You have previously denied permission for this app to use the camera.",
+    "requestIfNeeded" : false,
+    "optional" : true
+}

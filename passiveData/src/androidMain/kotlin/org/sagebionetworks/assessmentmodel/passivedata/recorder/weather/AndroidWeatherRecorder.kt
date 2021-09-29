@@ -3,7 +3,6 @@ package org.sagebionetworks.assessmentmodel.passivedata.recorder.weather
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.annotation.RequiresPermission
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -11,8 +10,8 @@ import com.google.android.gms.location.LocationRequest.PRIORITY_BALANCED_POWER_A
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.CancellationTokenSource
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
+import kotlin.coroutines.coroutineContext
 
 
 class AndroidWeatherRecorder(
@@ -38,11 +37,12 @@ class AndroidWeatherRecorder(
                 Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
-            Log.w(tag, "No permissions for location")
+            Napier.i("No permissions for location")
             return
         }
 
-        runBlocking {
+
+        CoroutineScope(Job()).launch {
             Napier.i("Launching services")
             launchWeatherServices(
                 getLocation()
@@ -66,15 +66,18 @@ class AndroidWeatherRecorder(
                 cancellationToken
             )
 
-        val result = CompletableDeferred<Location?>()
+        val result = CompletableDeferred<Location?>(coroutineContext.job)
         currentLocation.addOnCompleteListener { task ->
             if (task.isSuccessful) {
+                Napier.i("Successfully retrieved location")
                 result.complete(with(currentLocation.result) {
                     Location(longitude = longitude, latitude = latitude)
                 })
             } else if (task.exception != null) {
+                Napier.e("Encountered exception while retrieving location", task.exception)
                 result.completeExceptionally(task.exception!!)
             } else {
+                Napier.w("Location retrieval completed unsuccessfully")
                 result.complete(null)
             }
         }

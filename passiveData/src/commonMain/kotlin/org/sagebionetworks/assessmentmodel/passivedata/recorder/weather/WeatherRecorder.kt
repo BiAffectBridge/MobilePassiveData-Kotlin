@@ -1,6 +1,7 @@
 package org.sagebionetworks.assessmentmodel.passivedata.recorder.weather
 
 import io.github.aakira.napier.Napier
+import io.ktor.client.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
@@ -10,6 +11,9 @@ import org.sagebionetworks.assessmentmodel.passivedata.recorder.Recorder
 abstract class WeatherRecorder(override val configuration: WeatherConfiguration) :
     Recorder<WeatherResult> {
 
+    val httpClient = HttpClient {
+
+    }
     lateinit var weatherServices: List<WeatherService>
 
 
@@ -23,12 +27,30 @@ abstract class WeatherRecorder(override val configuration: WeatherConfiguration)
             Napier.w("No location available, unable to start recorder")
             return
         }
+        weatherServices = configuration.services.map { weatherServiceFactory(it) }
         supervisorScope {
             weatherServices.map { service ->
                 this.async {
-                    //TODO: real location
                     return@async service.getResult(location)
                 }
+            }
+        }
+    }
+
+    fun weatherServiceFactory(configuration: WeatherServiceConfiguration): WeatherService {
+        return when (configuration.providerName) {
+            WeatherServiceProviderName.AIR_NOW -> {
+                OpenWeatherService(
+                    configuration,
+                    httpClient
+                )
+            }
+            else -> {
+                // TODO: AQI
+                OpenWeatherService(
+                    configuration,
+                    httpClient
+                )
             }
         }
     }

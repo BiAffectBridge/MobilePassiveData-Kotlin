@@ -1,5 +1,6 @@
 package org.sagebionetworks.assessmentmodel.passivedata.recorder.weather
 
+import io.github.aakira.napier.Napier
 import io.ktor.client.*
 import org.sagebionetworks.assessmentmodel.passivedata.ResultData
 import io.ktor.client.request.*
@@ -124,6 +125,7 @@ class OpenWeatherService(
         }
 
         fun toWeatherServiceResult(identifier: String): WeatherServiceResult {
+            Napier.d("Converting WeatherServiceResult for id: $identifier")
             return WeatherServiceResult(
                 identifier = identifier,
                 providerName = WeatherServiceProviderName.OPEN_WEATHER,

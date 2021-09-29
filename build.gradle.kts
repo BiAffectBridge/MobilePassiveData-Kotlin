@@ -6,12 +6,18 @@ buildscript {
     }
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}")
-        classpath("com.android.tools.build:gradle:4.2.1")
+        classpath("com.android.tools.build:gradle:4.2.2")
         classpath("org.jetbrains.kotlin:kotlin-serialization:${Versions.kotlin}")
     }
 }
 
+plugins {
+    id("maven-publish")
+}
+
 allprojects {
+    group = "org.sagebionetworks.bridge.kmm"
+    version = "0.1.0-SNAPSHOT"
     repositories {
         google()
         mavenCentral()

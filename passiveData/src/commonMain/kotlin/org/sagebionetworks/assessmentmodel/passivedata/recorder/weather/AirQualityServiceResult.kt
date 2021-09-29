@@ -1,4 +1,4 @@
-package org.sagebionetworks.assessmentmodel.passivedata.weather
+package org.sagebionetworks.assessmentmodel.passivedata.recorder.weather
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable

@@ -1,4 +1,4 @@
-package org.sagebionetworks.assessmentmodel.passivedata.weather
+package org.sagebionetworks.assessmentmodel.passivedata.recorder.weather
 
 import kotlinx.serialization.Serializable
 import org.sagebionetworks.assessmentmodel.passivedata.internal.StringEnum

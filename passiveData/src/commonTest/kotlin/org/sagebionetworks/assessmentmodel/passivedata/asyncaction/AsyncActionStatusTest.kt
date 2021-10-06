@@ -16,6 +16,6 @@ class AsyncActionStatusTest {
 
     @Test
     fun testDescription() {
-        assertEquals("requestingPermission", REQUESTING_PERMISSION.description)
+        assertEquals("requestingPermission", REQUESTING_PERMISSION.serialName)
     }
 }

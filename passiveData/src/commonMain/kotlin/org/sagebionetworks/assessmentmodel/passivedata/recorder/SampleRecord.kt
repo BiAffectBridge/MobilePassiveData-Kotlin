@@ -11,21 +11,21 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 
-@Serializable
-data class TimeSeriesRecord constructor(
+interface SampleRecord {
 
     /// An identifier marking the current step.
     ///
     /// This is a path marker where the path components are separated by a '/' character. This path
     /// includes the task identifier and any sections or subtasks for the full path to the current
     /// step.
-    /// TODO: var stepPath: String,
+    /// TODO: implement step path - liujoshua 2021-09-14
+    /// var stepPath: String
 
     /// The date timestamp when the measurement was taken (if available). This should be included
     /// for the first entry to mark the start of the recording. Other than to mark step changes,
     /// the `timestampDate` is optional and should only be included if required by the research
     /// study.
-    val timestampDate: Instant?,
+    val timestampDate: Instant?
 
     /// A timestamp that is relative to the system uptime.
     ///
@@ -45,16 +45,17 @@ data class TimeSeriesRecord constructor(
     /// -seealso: `ProcessInfo.processInfo.systemUptime`
     @Serializable(with = DateTimePeriodAsSecondsSerializer::class)
     val timestamp: DateTimePeriod?
-)
+}
 
 object DateTimePeriodAsSecondsSerializer : KSerializer<DateTimePeriod> {
+    const val secondsToNanos = 1_000_000_000
     override val descriptor: SerialDescriptor
-        get() = PrimitiveSerialDescriptor("Instant", PrimitiveKind.STRING)
+        get() = PrimitiveSerialDescriptor("DateTimePeriod", PrimitiveKind.STRING)
 
     override fun serialize(encoder: Encoder, value: DateTimePeriod) =
-        encoder.encodeString("${value.nanoseconds / 1_000_000_000}")
+        encoder.encodeDouble(value.nanoseconds.toDouble() / secondsToNanos)
 
     override fun deserialize(decoder: Decoder): DateTimePeriod {
-        TODO("Not yet implemented")
+        return DateTimePeriod(nanoseconds = (decoder.decodeDouble() * secondsToNanos).toLong())
     }
 }

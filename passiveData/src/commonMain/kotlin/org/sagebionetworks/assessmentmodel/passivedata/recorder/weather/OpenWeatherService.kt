@@ -125,7 +125,7 @@ class OpenWeatherService(
         }
 
         fun toWeatherServiceResult(identifier: String): WeatherServiceResult {
-            Napier.d("Converting WeatherServiceResult for id: $identifier")
+            Napier.d("Converting WeatherServiceResult: $this")
             return WeatherServiceResult(
                 identifier = identifier,
                 providerName = WeatherServiceProviderName.OPEN_WEATHER,

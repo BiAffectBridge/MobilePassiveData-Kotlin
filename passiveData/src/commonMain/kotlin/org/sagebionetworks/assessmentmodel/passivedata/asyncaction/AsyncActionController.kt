@@ -3,13 +3,14 @@ package org.sagebionetworks.assessmentmodel.passivedata.asyncaction
 import org.sagebionetworks.assessmentmodel.passivedata.ResultData
 import kotlinx.coroutines.Deferred
 
-interface AsyncActionController<R : ResultData> {
+interface AsyncActionController<out R : ResultData> {
 
     /// The status of the controller.
     val status: AsyncActionStatus
 
     /// The current `stepPath` to record to log samples.
-    val currentStepPath: String
+    /// TODO: implement stepPaths in Assessment Models - liujoshua 2021-09-24
+    /// val currentStepPath: String
 
     /// Results for this action controller.
 

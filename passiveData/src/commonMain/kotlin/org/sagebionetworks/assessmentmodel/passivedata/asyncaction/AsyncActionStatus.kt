@@ -1,8 +1,9 @@
 package org.sagebionetworks.assessmentmodel.passivedata.asyncaction
 
+import kotlinx.serialization.SerialName
 import org.sagebionetworks.assessmentmodel.passivedata.internal.StringEnum
 
-enum class AsyncActionStatus(val description: String) : StringEnum {
+enum class AsyncActionStatus(override val serialName: String) : StringEnum {
     /// Initial state before the controller has been started.
     IDLE("idle"),
 

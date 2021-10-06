@@ -32,6 +32,12 @@ kotlin {
                     .getProperty("openWeatherApiKey")
                     ?: System.getenv("OPEN_WEATHER_API_KEY")
             )
+            systemProperty(
+                "airNowApiKey",
+                gradleLocalProperties(rootProject.rootDir)
+                    .getProperty("airNowApiKey")
+                    ?: System.getenv("AIR_NOW_API_KEY")
+            )
         }
     }
 
@@ -89,12 +95,8 @@ kotlin {
             dependencies {
                 api(Deps.Coroutines.android)
 
-                api(Deps.AssessmentModel.sdk)
                 implementation(Deps.Ktor.clientAndroid)
                 implementation(Deps.Koin.android)
-
-                // TODO: experimental
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-rx2:${Versions.kotlinCoroutines}")
             }
         }
         val androidTest by getting {

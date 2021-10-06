@@ -2,13 +2,13 @@ object Versions {
 
     const val assessmentVersion = "0.4.4"
 
-    const val kotlinxDateTime = "0.2.1"
+    const val kotlinxDateTime = "0.3.0"
 
-    const val kotlin = "1.5.30"
-    const val kotlinxSerializationJson = "1.2.2"
-    const val kotlinCoroutines = "1.5.1-native-mt"
+    const val kotlin = "1.5.31"
+    const val kotlinxSerializationJson = "1.3.0"
+    const val kotlinCoroutines = "1.5.2-native-mt"
 
-    const val ktor = "1.6.1"
+    const val ktor = "1.6.3"
 
     const val koin = "3.1.1"
 

@@ -6,7 +6,7 @@ buildscript {
     }
     dependencies {
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}")
-        classpath("com.android.tools.build:gradle:4.2.2")
+        classpath("com.android.tools.build:gradle:7.0.2")
         classpath("org.jetbrains.kotlin:kotlin-serialization:${Versions.kotlin}")
     }
 }
@@ -16,7 +16,7 @@ plugins {
 }
 
 allprojects {
-    group = "org.sagebionetworks.bridge.kmm"
+    group = "org.sagebionetworks.research.kmm"
     version = "0.1.0-SNAPSHOT"
     repositories {
         google()

@@ -1,26 +1,31 @@
 package org.sagebionetworks.assessmentmodel.passivedata.recorder
 
 import android.content.Context
+import io.github.aakira.napier.Napier
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import org.sagebionetworks.assessmentmodel.passivedata.asyncaction.AsyncActionConfiguration
 import org.sagebionetworks.assessmentmodel.passivedata.asyncaction.AsyncActionStatus
-import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.SharedFlowRecorder
-import java.io.*
+import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.FlowRecorder
+import java.io.File
+import java.io.IOException
+import java.io.PrintStream
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 
-abstract class SharedFlowJsonFileResultRecorder<in E>(
+/**
+ * Base class for a Recorder that reads from a Flow and produces a FileResult in Json format.
+ */
+abstract class FlowJsonFileResultRecorder<in E>(
     override val identifier: String,
     override val configuration: AsyncActionConfiguration,
     override val scope: CoroutineScope,
-    flow: SharedFlow<E>,
-    private val filename: String,
+    flow: Flow<E>,
     private val context: Context
-) : SharedFlowRecorder<E, FileResult>(
+) : FlowRecorder<E, FileResult>(
     identifier, configuration, scope, flow
 ) {
     override val result = CompletableDeferred<FileResult>()
@@ -32,13 +37,11 @@ abstract class SharedFlowJsonFileResultRecorder<in E>(
 
     private lateinit var file: File
     protected lateinit var filePrintStream: PrintStream
-    private lateinit var startDate: Instant
 
     private val isFirstJsonObject = AtomicBoolean(true)
 
     override fun start() {
-        startDate = Clock.System.now()
-        file = getTaskOutputFile(filename)
+        file = getTaskOutputFile("$identifier.json")
         filePrintStream = PrintStream(file)
         filePrintStream.print(JSON_FILE_START)
         super.start()
@@ -68,16 +71,16 @@ abstract class SharedFlowJsonFileResultRecorder<in E>(
     abstract fun serializeElement(e: E)
 
     override fun completedHandlingFlow(e: Throwable?) {
-
-        if (e == null) {
+        Napier.i("Completed handling flow")
+        if (e == null || e is CancellationException) {
             filePrintStream.print(JSON_FILE_END)
             result.complete(
                 FileResult(
-                    filename,
-                    startDate,
-                    Clock.System.now(),
+                    identifier,
+                    startTime ?: Clock.System.now(),
+                    endTime ?: Clock.System.now(),
                     JSON_MIME_CONTENT_TYPE,
-                    filename
+                    file.path
                 )
             )
             _asyncStatus = AsyncActionStatus.FINISHED

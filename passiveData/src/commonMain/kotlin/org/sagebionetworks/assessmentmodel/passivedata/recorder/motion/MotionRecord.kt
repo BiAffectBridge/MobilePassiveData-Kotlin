@@ -9,7 +9,7 @@ import org.sagebionetworks.assessmentmodel.passivedata.recorder.SampleRecord
 @Serializable
 data class MotionRecord(
     override val timestampDate: Instant?,
-    override val timestamp: DateTimePeriod?
+    override val timestamp: Long?
 ) : SampleRecord
 
 

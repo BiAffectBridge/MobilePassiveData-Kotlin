@@ -23,8 +23,11 @@ data class MotionRecorderConfiguration(
     val frequency: Double? = null,
     val usesCSVEncoding: Boolean = false
 ) : RestartableRecorderConfiguration {
-    override val typeName: String
-        get() = AsyncActionType.Motion.name
+    override val typeName = TYPE
+
+    companion object {
+        const val TYPE = "motion"
+    }
 }
 
 

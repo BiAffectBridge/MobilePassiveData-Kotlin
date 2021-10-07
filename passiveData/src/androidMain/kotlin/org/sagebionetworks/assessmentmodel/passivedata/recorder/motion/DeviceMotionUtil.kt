@@ -7,7 +7,9 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.SystemClock
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
+import kotlinx.datetime.minus
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.JsonObject
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.sensor.*
@@ -356,12 +358,9 @@ class DeviceMotionUtil {
              * sensor timestamp
              * @return instant corresponding to sensor timestamp
              */
-            @ExperimentalTime
             fun instantOf(sensorTimestamp: Long): Instant {
-                return Clock.System.now().minus(
-                    Duration.Companion.nanoseconds(SystemClock.elapsedRealtimeNanos() - sensorTimestamp)
-                )
-
+                return Clock.System.now()
+                    .minus(DateTimeUnit.TimeBased(SystemClock.elapsedRealtimeNanos() - sensorTimestamp))
             }
         }
     }

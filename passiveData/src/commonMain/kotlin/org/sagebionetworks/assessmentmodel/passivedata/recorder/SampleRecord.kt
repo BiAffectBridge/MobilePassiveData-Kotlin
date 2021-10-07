@@ -43,19 +43,5 @@ interface SampleRecord {
     /// accepts a phone call while the recorder is running.
     ///
     /// -seealso: `ProcessInfo.processInfo.systemUptime`
-    @Serializable(with = DateTimePeriodAsSecondsSerializer::class)
-    val timestamp: DateTimePeriod?
-}
-
-object DateTimePeriodAsSecondsSerializer : KSerializer<DateTimePeriod> {
-    const val secondsToNanos = 1_000_000_000
-    override val descriptor: SerialDescriptor
-        get() = PrimitiveSerialDescriptor("DateTimePeriod", PrimitiveKind.STRING)
-
-    override fun serialize(encoder: Encoder, value: DateTimePeriod) =
-        encoder.encodeDouble(value.nanoseconds.toDouble() / secondsToNanos)
-
-    override fun deserialize(decoder: Decoder): DateTimePeriod {
-        return DateTimePeriod(nanoseconds = (decoder.decodeDouble() * secondsToNanos).toLong())
-    }
+    val timestamp: Long?
 }

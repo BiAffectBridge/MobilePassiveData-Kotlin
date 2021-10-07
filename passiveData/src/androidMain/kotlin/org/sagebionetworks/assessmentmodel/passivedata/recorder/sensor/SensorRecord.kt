@@ -1,59 +1,90 @@
+@file:UseSerializers(OffsetZonedInstantSerializer::class, LongNanosAsSecondsSerializer::class)
+
 package org.sagebionetworks.assessmentmodel.passivedata.recorder.sensor
 
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorManager
 import android.os.Build
-import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.Instant
-import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
+import org.sagebionetworks.assessmentmodel.passivedata.OffsetZonedInstantSerializer
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.SampleRecord
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.DeviceMotionUtil
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.DeviceMotionUtil.Companion.SENSOR_TYPE_TO_DATA_TYPE
-import org.sagebionetworks.assessmentmodel.passivedata.recorder.sensor.SensorRecord.Companion.SECONDS_TO_NANOS
-import kotlin.time.ExperimentalTime
 
 interface SensorRecord
     : SampleRecord {
 
     val sensorType: String?
 
-    // system uptime in seconds
-    val uptime: Double?
+    // system uptime in nanos, serialized in seconds
+    val uptime: Long?
     val eventAccuracy: Int?
 
     // first sensor record will have a timestampDate. this is the zero reference for subsequent
     // records' relative timestamp
     override val timestampDate: Instant?
 
-    // relative timestamp in seconds. seconds elapsed since first recorded event
-    override val timestamp: DateTimePeriod?
+    // relative timestamp in nano seconds. serialized as seconds elapsed since first recorded event
+    override val timestamp: Long?
 
     companion object {
         const val SECONDS_TO_NANOS = 1_000_000_000
     }
 }
 
+object LongNanosAsSecondsSerializer : KSerializer<Long> {
+    const val secondsToNanos = 1_000_000_000
+    override val descriptor: SerialDescriptor
+        get() = PrimitiveSerialDescriptor("DateTimePeriod", PrimitiveKind.DOUBLE)
+
+    override fun serialize(encoder: Encoder, value: Long) {
+
+        encoder.encodeDouble(value.toDouble() / secondsToNanos)
+    }
+
+    override fun deserialize(decoder: Decoder): Long {
+        return (decoder.decodeDouble() * secondsToNanos).toLong()
+    }
+}
+
+@ExperimentalSerializationApi
+val sensorRecordModule = SerializersModule {
+    polymorphic(SensorRecord::class) {
+        subclass(FirstRecord::class)
+        subclass(AccelerationRecord::class)
+        subclass(GyroscopeRecord::class)
+        subclass(MagneticRecord::class)
+        subclass(RotationRecord::class)
+        subclass(UncalibratedRecord::class)
+    }
+}
+
 @Serializable
 data class FirstRecord(
     override val timestampDate: Instant? = null,
-    override val timestamp: DateTimePeriod?,
+    override val timestamp: Long?,
     override val sensorType: String?,
-    override val uptime: Double?,
+    override val uptime: Long?,
     override val eventAccuracy: Int?,
     @Transient val sensor: Sensor? = null
 ) : SensorRecord
 
-@ExperimentalTime
 fun SensorEvent.createFirstRecord(): FirstRecord {
     return FirstRecord(
         timestampDate = DeviceMotionUtil.SensorEventPOJO.instantOf(timestamp),
-        timestamp = DateTimePeriod(),
+        timestamp = 0,
         sensorType = SENSOR_TYPE_TO_DATA_TYPE[sensor.type],
-        uptime = timestamp.toDouble() / SECONDS_TO_NANOS,
+        uptime = timestamp,
         eventAccuracy = null,
         sensor = sensor
     )
@@ -62,9 +93,9 @@ fun SensorEvent.createFirstRecord(): FirstRecord {
 @ExperimentalSerializationApi
 @Serializable
 data class AccelerationRecord(
-    override val timestamp: DateTimePeriod?,
+    override val timestamp: Long?,
     override val sensorType: String?,
-    override val uptime: Double?,
+    override val uptime: Long?,
     val x: Double,
     val y: Double,
     val z: Double
@@ -80,9 +111,9 @@ data class AccelerationRecord(
 @ExperimentalSerializationApi
 fun SensorEvent.createAccelerationRecord(referenceTimestamp: Long): AccelerationRecord {
     return AccelerationRecord(
-        timestamp = DateTimePeriod(nanoseconds = timestamp - referenceTimestamp),
+        timestamp = timestamp - referenceTimestamp,
         sensorType = SENSOR_TYPE_TO_DATA_TYPE[sensor.type],
-        uptime = timestamp.toDouble() / SECONDS_TO_NANOS,
+        uptime = timestamp,
         x = (values[0] / SensorManager.GRAVITY_EARTH).toDouble(),
         y = (values[1] / SensorManager.GRAVITY_EARTH).toDouble(),
         z = (values[2] / SensorManager.GRAVITY_EARTH).toDouble()
@@ -90,10 +121,11 @@ fun SensorEvent.createAccelerationRecord(referenceTimestamp: Long): Acceleration
 }
 
 @ExperimentalSerializationApi
+@Serializable
 data class GyroscopeRecord(
-    override val timestamp: DateTimePeriod?,
+    override val timestamp: Long?,
     override val sensorType: String?,
-    override val uptime: Double?,
+    override val uptime: Long?,
     val x: Double,
     val y: Double,
     val z: Double
@@ -108,9 +140,9 @@ data class GyroscopeRecord(
 @ExperimentalSerializationApi
 fun SensorEvent.createGyroscopeRecord(referenceTimestamp: Long): GyroscopeRecord {
     return GyroscopeRecord(
-        timestamp = DateTimePeriod(nanoseconds = timestamp - referenceTimestamp),
+        timestamp = timestamp - referenceTimestamp,
         sensorType = SENSOR_TYPE_TO_DATA_TYPE[sensor.type],
-        uptime = timestamp.toDouble() / SECONDS_TO_NANOS,
+        uptime = timestamp,
         x = values[0].toDouble(),
         y = values[1].toDouble(),
         z = values[2].toDouble()
@@ -120,9 +152,9 @@ fun SensorEvent.createGyroscopeRecord(referenceTimestamp: Long): GyroscopeRecord
 @ExperimentalSerializationApi
 @Serializable
 data class MagneticRecord(
-    override val timestamp: DateTimePeriod?,
+    override val timestamp: Long?,
     override val sensorType: String?,
-    override val uptime: Double?,
+    override val uptime: Long?,
     val x: Double,
     val y: Double,
     val z: Double
@@ -137,15 +169,14 @@ data class MagneticRecord(
 @ExperimentalSerializationApi
 fun SensorEvent.createMagneticRecord(referenceTimestamp: Long): MagneticRecord {
     return MagneticRecord(
-        timestamp = DateTimePeriod(nanoseconds = timestamp - referenceTimestamp),
+        timestamp = timestamp - referenceTimestamp,
         sensorType = SENSOR_TYPE_TO_DATA_TYPE[sensor.type],
-        uptime = timestamp.toDouble() / SECONDS_TO_NANOS,
+        uptime = timestamp,
         x = values[0].toDouble(),
         y = values[1].toDouble(),
         z = values[2].toDouble()
     )
 }
-
 
 /**
  * @param x rot_axis.x * sin(theta/2)
@@ -155,9 +186,9 @@ fun SensorEvent.createMagneticRecord(referenceTimestamp: Long): MagneticRecord {
  */
 @Serializable
 data class RotationRecord(
-    override val timestamp: DateTimePeriod?,
+    override val timestamp: Long?,
     override val sensorType: String?,
-    override val uptime: Double?,
+    override val uptime: Long?,
     val x: Double,
     val y: Double,
     val z: Double,
@@ -196,9 +227,9 @@ fun SensorEvent.createRotationRecord(referenceTimestamp: Long): RotationRecord {
     }
 
     return RotationRecord(
-        timestamp = DateTimePeriod(nanoseconds = timestamp - referenceTimestamp),
+        timestamp = timestamp - referenceTimestamp,
         sensorType = SENSOR_TYPE_TO_DATA_TYPE[sensor.type],
-        uptime = timestamp.toDouble() / SECONDS_TO_NANOS,
+        uptime = timestamp,
         x = values[0].toDouble(),
         y = values[1].toDouble(),
         z = values[2].toDouble(),
@@ -211,9 +242,9 @@ fun SensorEvent.createRotationRecord(referenceTimestamp: Long): RotationRecord {
 
 @Serializable
 data class UncalibratedRecord(
-    override val timestamp: DateTimePeriod?,
+    override val timestamp: Long?,
     override val sensorType: String?,
-    override val uptime: Double?,
+    override val uptime: Long?,
     val xUncalibrated: Double,
     val yUncalibrated: Double,
     val zUncalibrated: Double,
@@ -228,9 +259,9 @@ data class UncalibratedRecord(
 @ExperimentalSerializationApi
 fun SensorEvent.createUncalibratedRecord(referenceTimestamp: Long): UncalibratedRecord {
     return UncalibratedRecord(
-        timestamp = DateTimePeriod(nanoseconds = timestamp - referenceTimestamp),
+        timestamp = timestamp - referenceTimestamp,
         sensorType = SENSOR_TYPE_TO_DATA_TYPE[sensor.type],
-        uptime = timestamp.toDouble() / SECONDS_TO_NANOS,
+        uptime = timestamp,
         xUncalibrated = values[0].toDouble(),
         yUncalibrated = values[1].toDouble(),
         zUncalibrated = values[2].toDouble(),

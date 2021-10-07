@@ -1,32 +1,38 @@
 package org.sagebionetworks.assessmentmodel.passivedata.recorder.motion
 
 import android.content.Context
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.serialization.json.Json
-import org.sagebionetworks.assessmentmodel.passivedata.asyncaction.AsyncActionConfiguration
-import org.sagebionetworks.assessmentmodel.passivedata.recorder.SharedFlowJsonFileResultRecorder
-import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.DeviceMotionUtil.Companion.SENSOR_TYPE_TO_RECORD_FACTORY
 import android.hardware.SensorEvent
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToStream
+import org.sagebionetworks.assessmentmodel.passivedata.asyncaction.AsyncActionConfiguration
+import org.sagebionetworks.assessmentmodel.passivedata.recorder.FlowJsonFileResultRecorder
+import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.DeviceMotionUtil.Companion.SENSOR_TYPE_TO_RECORD_FACTORY
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.sensor.SensorRecord
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.sensor.createFirstRecord
+import java.lang.Exception
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.ExperimentalTime
 
+/**
+ * Writes a SensorEvent Flow as a Json formatted FileResult.
+ *
+ * The SensorEvents are written in the way defined by SensorRecord.
+ * @see SensorRecord
+ */
 class DeviceMotionJsonFileResultRecorder(
     override val identifier: String,
     override val configuration: AsyncActionConfiguration,
     override val scope: CoroutineScope,
-    flow: SharedFlow<SensorEvent>,
-    filename: String,
+    flow: Flow<SensorEvent>,
     context: Context,
     val jsonCoder: Json
 ) :
-    SharedFlowJsonFileResultRecorder<SensorEvent>(
-        identifier, configuration, scope, flow, filename, context
+    FlowJsonFileResultRecorder<SensorEvent>(
+        identifier, configuration, scope, flow, context
     ) {
     var firstEventUptimeReference = AtomicReference<Long>()
 
@@ -48,7 +54,11 @@ class DeviceMotionJsonFileResultRecorder(
         if (record == null) {
             Napier.w("Failed to serialize SensorEvent for recorder $identifier and sensor ${e.sensor}")
         } else {
-            jsonCoder.encodeToStream(record, filePrintStream)
+            try {
+                jsonCoder.encodeToStream(record, filePrintStream)
+            } catch (e: Exception) {
+                Napier.w("Error encoding sensor record $record", e)
+            }
         }
     }
 

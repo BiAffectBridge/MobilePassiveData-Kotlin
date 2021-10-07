@@ -6,6 +6,9 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.sensor.SensorEventFlow
 import kotlin.math.roundToInt
 
+/**
+ * Taken from ResearchStack and SageResearch DeviceMotionUtils.
+ */
 fun MotionRecorderType.toSensorType(): Int? {
     return when (this) {
         MotionRecorderType.ACCELEROMETER, MotionRecorderType.USER_ACCELERATION -> Sensor.TYPE_ACCELEROMETER

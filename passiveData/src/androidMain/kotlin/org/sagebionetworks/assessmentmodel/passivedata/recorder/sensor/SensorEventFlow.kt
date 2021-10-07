@@ -6,17 +6,26 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.*
 import kotlinx.coroutines.flow.*
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.MotionRecorderConfiguration
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.MotionRecorderType
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.toSensorType
 import kotlin.math.roundToInt
 
+/**
+ * Access a Flow of SensorEvents from Android's SensorManager.
+ * @param context applicationContext
+ * @param sensors list of sensors
+ * @param samplingPeriodInUs sampling period in microseconds
+ *
+ * @see android.hardware.SensorEvent.values
+ */
 @ExperimentalCoroutinesApi
 class SensorEventFlow(
     val context: Context,
@@ -25,20 +34,25 @@ class SensorEventFlow(
 ) {
     val sensorManager: SensorManager = context.getSystemService(SENSOR_SERVICE) as SensorManager
 
-    fun getSensorData(): SharedFlow<ChannelSensorEvent> {
+    /**
+     * This Flow will register to listen for events from SensorManager when the first subscriber
+     * appears and unregister when the last subscriber disappears.
+     *
+     * @return a Flow containing sensor events
+     */
+    fun getSensorData(): SharedFlow<SensorEventComposite> {
 
-        val flow: Flow<ChannelSensorEvent> = callbackFlow {
+        val flow: Flow<SensorEventComposite> = callbackFlow {
             val listener = object : SensorEventListener {
                 override fun onSensorChanged(event: SensorEvent?) {
                     if (event !== null) {
-                        channel.trySend(ChannelSensorEvent.Event(event))
+                        channel.trySend(SensorEventComposite.SensorChanged(event))
                     }
-
                 }
 
                 override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
                     if (sensor !== null) {
-                        channel.trySend(ChannelSensorEvent.AccuracyChange(sensor, accuracy))
+                        channel.trySend(SensorEventComposite.AccuracyChange(sensor, accuracy))
                     }
                 }
             }
@@ -59,8 +73,9 @@ class SensorEventFlow(
                     )
                 }
 
+
             awaitClose {
-                Napier.d("Unregistering SensorEventListener")
+                Napier.w("Unregistering SensorEventListener")
                 sensorManager.unregisterListener(listener)
             }
         }
@@ -83,7 +98,6 @@ class SensorEventFlow(
             val samplingPeriodInUs = motionRecorderConfiguration.frequency?.let {
                 (1 / motionRecorderConfiguration.frequency
                         * SECONDS_TO_MICROSECONDS).roundToInt()
-                    .toInt()
             } ?: SENSOR_DELAY_DEFAULT
 
             return SensorEventFlow(

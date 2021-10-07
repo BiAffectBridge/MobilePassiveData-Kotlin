@@ -5,6 +5,7 @@ plugins {
     kotlin("multiplatform")
     id("com.android.library")
     kotlin("plugin.serialization")
+    id("org.jetbrains.dokka")
     id("maven-publish")
 }
 
@@ -116,11 +117,11 @@ kotlin {
 }
 
 android {
-    compileSdkVersion(30)
+    compileSdk = 30
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
-        minSdkVersion(19)
-        targetSdkVersion(30)
+        minSdk = 19
+        targetSdk = 30
     }
 
     compileOptions {
@@ -128,3 +129,16 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
+
+publishing {
+    repositories {
+        maven {
+            url = uri("https://sagebionetworks.jfrog.io/artifactory/mobile-sdks/")
+            credentials {
+                username = System.getenv("artifactoryUser")
+                password = System.getenv("artifactoryPwd")
+            }
+        }
+    }
+}
+

@@ -12,12 +12,13 @@ buildscript {
 }
 
 plugins {
+    id("org.jetbrains.dokka") version Versions.kotlin
     id("maven-publish")
 }
 
 allprojects {
     group = "org.sagebionetworks.research.kmm"
-    version = "0.1.0-SNAPSHOT"
+    version = "0.1.0"
     repositories {
         google()
         mavenCentral()

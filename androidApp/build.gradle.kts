@@ -14,7 +14,7 @@ android {
     compileSdkVersion(30)
     defaultConfig {
         applicationId = "org.sagebionetworks.assessmentmodel.passivedata.android"
-        minSdkVersion(19)
+        minSdkVersion(21)
         targetSdkVersion(30)
         versionCode = 1
         versionName = "1.0"
@@ -22,6 +22,17 @@ android {
     buildTypes {
         getByName("release") {
             isMinifyEnabled = false
+
+            packagingOptions {
+                resources.excludes += "DebugProbesKt.bin"
+            }
         }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }

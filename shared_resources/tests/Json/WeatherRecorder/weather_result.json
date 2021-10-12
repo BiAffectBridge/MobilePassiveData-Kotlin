@@ -1,0 +1,31 @@
+{
+  "weather" : {
+    "clouds" : 1,
+    "humidity" : 30,
+    "provider" : "openWeather",
+    "startDate" : "2021-09-20T13:06:02.000-07:00",
+    "wind" : {
+      "speed" : 4.6299999999999999,
+      "degrees" : 260
+    },
+    "seaLevelPressure" : 1015,
+    "temperature" : 26.890000000000001,
+    "identifier" : "weather",
+    "type" : "weather"
+  },
+  "airQuality" : {
+    "category" : {
+      "number" : 2,
+      "name" : "Moderate"
+    },
+    "provider" : "airNow",
+    "startDate" : "2021-09-20T13:10:54.458-07:00",
+    "type" : "airQuality",
+    "identifier" : "airQuality",
+    "aqi" : 57
+  },
+  "startDate" : "2021-09-20T13:10:53.307-07:00",
+  "type" : "weather",
+  "identifier" : "weather",
+  "endDate" : "2021-09-20T13:10:53.307-07:00"
+}

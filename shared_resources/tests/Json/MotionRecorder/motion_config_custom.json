@@ -1,0 +1,9 @@
+{
+    "identifier": "foo",
+    "type": "motion",
+    "startStepIdentifier": "start",
+    "stopStepIdentifier": "stop",
+    "requiresBackgroundAudio": true,
+    "recorderTypes": ["accelerometer", "gyro", "magnetometer"],
+    "frequency": 50
+}

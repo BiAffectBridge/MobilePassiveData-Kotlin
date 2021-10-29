@@ -22,9 +22,14 @@ import org.sagebionetworks.assessmentmodel.passivedata.recorder.motion.RecorderC
 @Serializable
 data class AudioRecorderConfiguration(
     override val identifier: String,
-    override val typeName: String,
     override val startStepIdentifier: String? = null,
     override val stopStepIdentifier: String? = null,
-    override val requiresBackgroundAudio: Boolean,
+    override val requiresBackgroundAudio: Boolean = false,
     val saveAudioFile: Boolean? = false
-) : RecorderConfiguration
+) : RecorderConfiguration {
+    override val typeName: String = TYPE
+
+    companion object {
+        const val TYPE = "microphone"
+    }
+}

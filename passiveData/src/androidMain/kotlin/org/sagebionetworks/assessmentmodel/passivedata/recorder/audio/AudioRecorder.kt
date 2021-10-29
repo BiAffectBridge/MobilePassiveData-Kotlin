@@ -1,31 +1,37 @@
 package org.sagebionetworks.assessmentmodel.passivedata.recorder.audio
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
 import android.media.MediaRecorder
 import android.os.Build
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withContext
 import org.sagebionetworks.assessmentmodel.passivedata.asyncaction.AsyncActionConfiguration
 import org.sagebionetworks.assessmentmodel.passivedata.recorder.FlowJsonFileResultRecorder
+import org.sagebionetworks.assessmentmodel.passivedata.recorder.sensor.SensorEventComposite
+import kotlin.math.ln
 
-class AudioRecorder(
+public class AudioRecorder(
     identifier: String,
     configuration: AsyncActionConfiguration,
     scope: CoroutineScope,
-    flow: Flow<AudioLevelRecord>,
+    flow: Flow<Double>,
     context: Context
 
-) : FlowJsonFileResultRecorder<AudioLevelRecord>(identifier, configuration, scope, flow, context) {
-    override fun serializeElement(e: AudioLevelRecord) {
-        MediaRecorder().apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                setAudioSource(MediaRecorder.AudioSource.UNPROCESSED)
-            } else {
-                setAudioSource(MediaRecorder.AudioSource.DEFAULT)
-            }
-        }
+) : FlowJsonFileResultRecorder<Double>(identifier, configuration, scope, flow, context) {
 
-        TODO("Not yet implemented")
+
+    override fun serializeElement(e: Double) {
+        Napier.d("AudioLevel: e")
+
     }
 
     override fun pause() {
@@ -39,4 +45,5 @@ class AudioRecorder(
     override fun isPaused(): Boolean {
         TODO("Not yet implemented")
     }
+
 }
